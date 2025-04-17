@@ -1,0 +1,60 @@
+From 0921400a39b61687db2bc55ebd5021eef507e960 Mon Sep 17 00:00:00 2001
+From: Viktor Ashirov <vashirov@redhat.com>
+Date: Tue, 28 Jan 2025 21:05:49 +0100
+Subject: [PATCH] Issue 6468 - Fix building for older versions of Python
+
+Bug Description:
+Structural Pattern Matching has been added in Python 3.10, older version
+do not support it.
+
+Fix Description:
+Replace `match` and `case` statements with `if-elif`.
+
+Relates: https://github.com/389ds/389-ds-base/issues/6468
+
+Reviewed by: @droideck (Thanks!)
+---
+ src/lib389/lib389/cli_conf/logging.py | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
+
+diff --git a/src/lib389/lib389/cli_conf/logging.py b/src/lib389/lib389/cli_conf/logging.py
+index 2e86f2de8..d1e32822c 100644
+--- a/src/lib389/lib389/cli_conf/logging.py
++++ b/src/lib389/lib389/cli_conf/logging.py
+@@ -234,19 +234,20 @@ def get_log_config(inst, basedn, log, args):
+     attr_map = {}
+     levels = {}
+ 
+-    match args.logtype:
+-        case "access":
+-            attr_map = ACCESS_ATTR_MAP
+-            levels = ACCESS_LEVELS
+-        case "error":
+-            attr_map = ERROR_ATTR_MAP
+-            levels = ERROR_LEVELS
+-        case "security":
+-            attr_map = SECURITY_ATTR_MAP
+-        case "audit":
+-            attr_map = AUDIT_ATTR_MAP
+-        case "auditfail":
+-            attr_map = AUDITFAIL_ATTR_MAP
++    if args.logtype == "access":
++        attr_map = ACCESS_ATTR_MAP
++        levels = ACCESS_LEVELS
++    elif args.logtype == "error":
++        attr_map = ERROR_ATTR_MAP
++        levels = ERROR_LEVELS
++    elif args.logtype == "security":
++        attr_map = SECURITY_ATTR_MAP
++    elif args.logtype == "audit":
++        attr_map = AUDIT_ATTR_MAP
++    elif args.logtype == "auditfail":
++        attr_map = AUDITFAIL_ATTR_MAP
++    else:
++        raise ValueError(f"Unknown logtype: {args.logtype}")
+ 
+     sorted_results = []
+     for attr, value in attrs.items():
+-- 
+2.48.0
+
