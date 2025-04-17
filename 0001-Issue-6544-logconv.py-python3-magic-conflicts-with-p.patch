@@ -1,0 +1,53 @@
+From 1417198b95ca3e618ac26e748ec4bde6417c105c Mon Sep 17 00:00:00 2001
+From: Viktor Ashirov <vashirov@redhat.com>
+Date: Sat, 25 Jan 2025 13:54:33 +0100
+Subject: [PATCH] Issue 6544 - logconv.py: python3-magic conflicts with
+ python3-file-magic
+
+Bug Description:
+python3-magic and python3-file-magic can't be installed simultaneously,
+python3-magic is not packaged for EL10.
+
+Fix Description:
+Use python3-file-magic instead.
+
+Issue identified and fix suggested by Adam Williamson.
+
+Fixes: https://github.com/389ds/389-ds-base/issues/6544
+
+Reviewed by: @mreynolds389 (Thanks!)
+---
+ ldap/admin/src/logconv.py | 3 +--
+ rpm/389-ds-base.spec.in   | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/ldap/admin/src/logconv.py b/ldap/admin/src/logconv.py
+index 566f9af38..2fb5bb8c1 100755
+--- a/ldap/admin/src/logconv.py
++++ b/ldap/admin/src/logconv.py
+@@ -1798,8 +1798,7 @@ class logAnalyser:
+             return None
+ 
+         try:
+-            mime = magic.Magic(mime=True)
+-            filetype = mime.from_file(filepath)
++            filetype = magic.detect_from_filename(filepath).mime_type
+ 
+             # List of supported compression types
+             compressed_mime_types = [
+diff --git a/rpm/389-ds-base.spec.in b/rpm/389-ds-base.spec.in
+index 1b408be0f..74bcb4576 100644
+--- a/rpm/389-ds-base.spec.in
++++ b/rpm/389-ds-base.spec.in
+@@ -200,7 +200,7 @@ Requires:         json-c
+ # Log compression
+ Requires:         zlib-devel
+ # logconv.py, MIME type
+-Requires:         python-magic
++Requires:         python3-file-magic
+ # Picks up our systemd deps.
+ %{?systemd_requires}
+ 
+-- 
+2.48.0
+
